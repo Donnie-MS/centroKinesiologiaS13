@@ -20,23 +20,49 @@ class Aparato {
   var property color = blanco
   method usarPor(unPaciente)
   method puedeSerUsadoPor(unPaciente)
+  method necesitaMantenimiento() = false
+  method hacerleMantenimiento() {}
 }
+
 class Magneto inherits Aparato {
+  var property imantacion = 800
+  override method necesitaMantenimiento() = imantacion < 100
+  override method hacerleMantenimiento() {
+    self.imantacion(self.imantacion() + 500)
+  }
   override method usarPor(unPaciente) {
     unPaciente.nivelDeDolor(unPaciente.nivelDeDolor() * 0.90)
+    self.imantacion(self.imantacion() - 1)
   }
   override method puedeSerUsadoPor(unPaciente) = true
 }
 class Bicicleta inherits Aparato {
+  var cantVecesQueSeDesajustanTornillos = 0
+  var cantVecesQuePierdeAceite = 0
+
   override method usarPor(unPaciente) {
     if (not self.puedeSerUsadoPor(unPaciente)) {
       self.error("Debes tenes más de 8 anios")
     }
+    self.consecuenciasDeUso(unPaciente)
     unPaciente.nivelDeDolor((unPaciente.nivelDeDolor() - 4).max(0))
     unPaciente.fortalezaMuscular(unPaciente.fortalezaMuscular() + 3)
   }
+  method consecuenciasDeUso(unPaciente) {
+    if(unPaciente.nivelDeDolor > 30) {
+      cantVecesQueSeDesajustanTornillos += 1
+      if (unPaciente.edad() >= 30 and unPaciente.edad() <= 50) {
+        cantVecesQuePierdeAceite += 1
+      }
+    }
+  }
+  override hacerleMantenimiento() {
+    cantVecesQuePierdeAceite = 0
+    cantVecesQuePierdeAceite = 0
+  }
   override method puedeSerUsadoPor(unPaciente) = unPaciente.edad() > 8
 }
+
 class Minitramp inherits Aparato {
   override method usarPor(unPaciente) {
     if (not self.puedeSerUsadoPor(unPaciente)) {
@@ -82,4 +108,14 @@ object centroDeKinesiologia {
   method coloresDeAparatos = aparatos.map({aparato => aparato.color()}).asSet()
   method pacientesMenoresDe8Años = pacientes.filter({paciente => paciente.edad() < 8})
   method pacientesQueNoPuedenCumplirSesion = pacientes.filter({paciente => not paciente.puedeRealizarRutina()})
+  method estaEnOptimasCondiciones() = aparatos.all({aparato => not aparato.necesitaMantenimiento()})
+  method aparatosQueNecesitanMantenimiento() = aparatos.filter({aparato => aparato.necesitaMantenimiento})
+  method cantAparatosQueNecesitanMantenimiento() = self.aparatosQueNecesitanMantenimiento.size()
+  method estaComplicado() {
+    var mitadDeAparatos = aparatos.size().div(2)
+    return mitadDeAparatos > self.cantAparatosQueNecesitanMantenimiento()
+  }
+  method realizarMantenimiento() {
+    self.aparatosQueNecesitanMantenimiento().forEach({aparato =>aparato.hacerleMantenimiento()})
+  }
 }
